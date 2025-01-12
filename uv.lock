@@ -270,6 +270,7 @@ dependencies = [
     { name = "pydub" },
     { name = "pyinstaller" },
     { name = "pynput" },
+    { name = "pystray" },
     { name = "scipy" },
     { name = "sounddevice" },
     { name = "soundfile" },
@@ -286,6 +287,7 @@ requires-dist = [
     { name = "pydub", specifier = ">=0.25.1" },
     { name = "pyinstaller", specifier = ">=6.11.1" },
     { name = "pynput", specifier = ">=1.7.7" },
+    { name = "pystray", specifier = ">=0.19.5" },
     { name = "scipy", specifier = ">=1.15.1" },
     { name = "sounddevice", specifier = ">=0.5.1" },
     { name = "soundfile", specifier = ">=0.13.0" },
@@ -1229,6 +1231,20 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ca/92/29f0726d1031f0958db7639ab25fd1d2591b2c0638f3a7ca771bbf2cceee/pyobjc_framework_Quartz-10.3.2-cp312-cp312-macosx_10_13_universal2.whl", hash = "sha256:604188ee8ff051ffe74a12cb3274403fe9c3fa02b15fc4132685c0f74285ffe5", size = 209183 },
     { url = "https://files.pythonhosted.org/packages/91/31/514b9b7c20fb8347dce5cdaa0934253a9c2c637d3f05b8f6ab1bb7fbbb4f/pyobjc_framework_Quartz-10.3.2-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:9e27fb446e012c9571bc163cff5f3036e9e6fa5caca06b5d7882ad1c6b6aaf0c", size = 209167 },
     { url = "https://files.pythonhosted.org/packages/ed/8f/6c23066cfc3c65c9769ac0fb9696c94ce36dc81dba48270f9b4810ee72d6/pyobjc_framework_Quartz-10.3.2-cp313-cp313t-macosx_10_13_universal2.whl", hash = "sha256:d5bd6ef96a3d08c97cf2aca43a819113cdff494b5abebcedd7cf23b6d6e711f4", size = 213534 },
+]
+
+[[package]]
+name = "pystray"
+version = "0.19.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pillow" },
+    { name = "pyobjc-framework-quartz", marker = "sys_platform == 'darwin'" },
+    { name = "python-xlib", marker = "sys_platform == 'linux'" },
+    { name = "six" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/64/927a4b9024196a4799eba0180e0ca31568426f258a4a5c90f87a97f51d28/pystray-0.19.5-py2.py3-none-any.whl", hash = "sha256:a0c2229d02cf87207297c22d86ffc57c86c227517b038c0d3c59df79295ac617", size = 49068 },
 ]
 
 [[package]]
