@@ -12,7 +12,7 @@
       "identifier": "shell:allow-spawn",
       "allow": [
         {
-          "name": "binaries/functionalDetector",
+          "name": "binaries/functional_detector",
           "sidecar": true
         }
       ]

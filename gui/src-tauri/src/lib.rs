@@ -4,11 +4,16 @@ use tauri::tray::TrayIconBuilder;
 use tauri_plugin_shell::ShellExt;
 // use tauri::Listener;
 
-// use tauri::WindowEvent;
+use tauri::WindowEvent;
+
+use enigo::{
+    Direction::{Press, Release},
+    Enigo, Key, Keyboard, Settings,
+};
 
 
 #[tauri::command]
-async fn call_my_sidecar(app: tauri::AppHandle) {
+async fn call_my_sidecar(app: tauri::AppHandle, window: tauri::Window) {
     let sidecar_command = app
     .shell()
     .sidecar("functionalDetector")
@@ -19,16 +24,28 @@ async fn call_my_sidecar(app: tauri::AppHandle) {
 
     println!("spawn sidecar");
 
-    // window.on_window_event(move |e| {
-    //     let mut child = &child;
-    //     match e {
-    //         WindowEvent::Destroyed => {
-    //             println!("tryna kill");
-    //             child.kill();
-    //         },
-    //         _ => ()
-    //     };
-    // });
+    window.on_window_event(|e| {
+        match e {
+            WindowEvent::Destroyed => {
+                println!("tryna kill");
+
+                // kill child process
+                let mut enigo = Enigo::new(&Settings::default()).unwrap();
+                let _ = enigo.key(Key::Escape, Press);
+                let _ = enigo.key(Key::Escape, Release);
+            },
+            _ => ()
+        };
+
+        // let mut child = &child;
+        // match e {
+        //     WindowEvent::Destroyed => {
+        //         println!("tryna kill");
+        //         child.kill();
+        //     },
+        //     _ => ()
+        // };
+    });
 }  
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -51,6 +68,11 @@ pub fn run() {
                 .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
+                        // kill child process
+                        let mut enigo = Enigo::new(&Settings::default()).unwrap();
+                        let _ = enigo.key(Key::Escape, Press);
+                        let _ = enigo.key(Key::Escape, Release);
+
                         println!("quit menu item was clicked");
                         app.exit(0);
                     }
