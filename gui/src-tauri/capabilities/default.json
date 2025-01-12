@@ -1,0 +1,25 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/functionalDetector",
+          "sidecar": true
+        }
+      ]
+    },
+    "shell:default",
+    "shell:allow-open",
+    "shell:allow-kill",
+    "shell:allow-execute"
+  ]
+}
