@@ -1,14 +1,18 @@
 import pyaudio
 import pynput
+import threading
 import playback_controller
 import struct
 import sys
 import math
+import time
 
 THRESHOLD_START = 0.1
 CLAP_MAX_HIGH_SECONDS = 0.05
 BACKGROUND_SECONDS = 10
 CHUNK_SECONDS = 0.015
+
+COMMAND_EXPIRATION_SECONDS = 1
 
 RATE = 44100
 
@@ -38,25 +42,23 @@ def rootmeansquare(block):
     
     return math.sqrt(s / BLOCK_SIZE)
 
-def highpass(block):
-    print(block[10:12])
-    BLOCK_SIZE = len(block) // 2
+# def highpass(block):
+#     BLOCK_SIZE = len(block) // 2
 
-    highPassed = bytearray(len(block))
-    rc = CHUNK_SECONDS / (len(block)/2)
-    alpha = rc / (rc + CHUNK_SECONDS)
+#     highPassed = bytearray(len(block))
+#     rc = CHUNK_SECONDS / (len(block)/2)
+#     alpha = rc / (rc + CHUNK_SECONDS)
+#     print(alpha)
+#     highPassed[0] = block[0]
+#     highPassed[1] = block[1]
 
-    highPassed[0] = block[0]
-    highPassed[1] = block[1]
-
-    for i in range(1, BLOCK_SIZE):
-        index = i << 1
-        print((struct.unpack('h', highPassed[index-2:index])[0], struct.unpack('h', block[index:index+2])[0], - struct.unpack('h', block[index-2:index])[0]))
-        computed = alpha * (struct.unpack('h', highPassed[index-2:index])[0] + struct.unpack('h', block[index:index+2])[0] - struct.unpack('h', block[index-2:index])[0])
-        print(computed)
-        highPassed[index], highPassed[index+1] = struct.pack('h', computed)
+#     for i in range(1, BLOCK_SIZE):
+#         index = i << 1
+#         #print((struct.unpack('h', highPassed[index-2:index])[0], struct.unpack('h', block[index:index+2])[0], - struct.unpack('h', block[index-2:index])[0]))
+#         computed = alpha * (struct.unpack('h', highPassed[index-2:index])[0] + struct.unpack('h', block[index:index+2])[0] - struct.unpack('h', block[index-2:index])[0])
+#         highPassed[index], highPassed[index+1] = struct.pack('h', int(computed))
     
-    return highPassed
+#     return highPassed
 
 averageLow = 0
 averageSize = 0
@@ -65,9 +67,41 @@ highChunks = 0
 p = pyaudio.PyAudio()
 stream = p.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True)
 
+commandClaps = []
+runningThread = None
+
+def expiry():
+    global runningThread
+
+    print("expired")
+    c = len(commandClaps)
+    if c == 2:
+        playback_controller.press_release(playback_controller.keys[0])
+    else:
+        print("unknown command for %d claps" % c)
+    
+    commandClaps.clear()
+    runningThread = None
+
+def hi():
+    print("hi")
+
+def onClap(t):
+    global commandClaps
+    global runningThread
+
+    commandClaps.append(t)
+
+    if runningThread != None:
+        runningThread.cancel()
+    
+    runningThread = threading.Timer(COMMAND_EXPIRATION_SECONDS, expiry)
+    runningThread.start()
+
 while not shouldQuit:
     block = stream.read(CHUNK)
-    #block = highpass(block)
+    # block = highpass(block)
+    #print(block)
     rms = rootmeansquare(block)
 
     if THRESHOLD_START < rms and averageLow * 2 < rms:
@@ -75,11 +109,13 @@ while not shouldQuit:
     else:
         if 1 <= highChunks <= CLAP_MAX_HIGH_CHUNKS:
             print("clap detected", rms, averageLow)
-            playback_controller.press_release(playback_controller.keys[0])
+            onClap(time.time())
         else:
             averageLow = (averageLow * averageSize + rms) / (averageSize + 1)
             averageSize = min(averageSize + 1, BACKGROUND_CHUNKS)
         highChunks = 0
+    
+    #shouldQuit = True
 
 listener.stop()
 stream.close()
