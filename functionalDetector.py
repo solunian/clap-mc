@@ -1,5 +1,6 @@
 import pyaudio
 import pynput
+import numpy
 import threading
 import playback_controller
 import struct
@@ -7,7 +8,7 @@ import sys
 import math
 import time
 
-THRESHOLD_START = 0.04
+THRESHOLD_START = 0.02
 CLAP_MAX_HIGH_SECONDS = 0.05
 BACKGROUND_SECONDS = 10
 CHUNK_SECONDS = 0.025
@@ -64,7 +65,7 @@ def highpass(block):
         #print((struct.unpack('h', highPassed[index-2:index])[0], struct.unpack('h', block[index:index+2])[0], - struct.unpack('h', block[index-2:index])[0]))
         #computed = (struct.unpack('h', highPassed[index-2:index])[0] + struct.unpack('h', block[index:index+2])[0] - struct.unpack('h', block[index-2:index])[0])
         computed = struct.unpack('h', block[index:index+2])[0] - struct.unpack('h', block[index-2:index])[0]
-        highPassed[index], highPassed[index+1] = struct.pack('h', int(computed))
+        highPassed[index], highPassed[index+1] = struct.pack('h', min(32767, max(computed, -32767)))
     
     return highPassed
 
@@ -106,7 +107,7 @@ def expiry():
         print(("no command mapped to {:%db}." % len(ratios)).format(ratioFlags))
     else:
         cmd = COMMAND_LIST[key]
-        print(cmd[0], cmd[1])
+        #print(cmd[0], cmd[1])
         cmd[0](*cmd[1])
         
     commandClaps.clear()
@@ -128,6 +129,7 @@ while not shouldQuit:
     block = stream.read(CHUNK)
     block = highpass(block)
     rms = rootmeansquare(block)
+
     #print(rms)
 
     if THRESHOLD_START < rms and not averageLow * 2 < rms:
