@@ -8,7 +8,7 @@ import sys
 import math
 import time
 
-THRESHOLD_START = 0.02
+THRESHOLD_START = 0.015
 CLAP_MAX_HIGH_SECONDS = 0.05
 BACKGROUND_SECONDS = 10
 CHUNK_SECONDS = 0.025
@@ -16,10 +16,17 @@ CHUNK_SECONDS = 0.025
 COMMAND_EXPIRATION_SECONDS = 1
 COMMAND_RATIO_THRESHOLD = 1.5
 
+def pressNTimes(k, n):
+    for i in range(n):
+        playback_controller.press_release(k)
+
 COMMAND_LIST = {
-    (2,0b0): (playback_controller.press_release, [playback_controller.keys[0]]),
-    (3,0b10): (playback_controller.press_release, [playback_controller.keys[1]]),
-    (3,0b01): (playback_controller.press_release, [playback_controller.keys[2]])
+    (2,0b0): (playback_controller.press_release, [pynput.keyboard.Key.media_play_pause]),
+    (3,0b10): (playback_controller.press_release, [pynput.keyboard.Key.media_next]),
+    (3,0b01): (playback_controller.press_release, [pynput.keyboard.Key.media_previous]),
+    (4,0b100): (playback_controller.press_release, [pynput.keyboard.Key.media_volume_mute]),
+    (4,0b101): (pressNTimes, [pynput.keyboard.Key.media_volume_down, 3]),
+    (4,0b110): (pressNTimes, [pynput.keyboard.Key.media_volume_up, 3])
 }
 
 RATE = 44100
