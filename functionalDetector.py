@@ -10,9 +10,16 @@ import time
 THRESHOLD_START = 0.1
 CLAP_MAX_HIGH_SECONDS = 0.05
 BACKGROUND_SECONDS = 10
-CHUNK_SECONDS = 0.015
+CHUNK_SECONDS = 0.025
 
 COMMAND_EXPIRATION_SECONDS = 1
+COMMAND_RATIO_THRESHOLD = 1.5
+
+COMMAND_LIST = {
+    (2,0b0): (playback_controller.press_release, [playback_controller.keys[0]]),
+    (3,0b10): (playback_controller.press_release, [playback_controller.keys[1]]),
+    (3,0b01): (playback_controller.press_release, [playback_controller.keys[2]])
+}
 
 RATE = 44100
 
@@ -73,18 +80,35 @@ runningThread = None
 def expiry():
     global runningThread
 
-    print("expired")
-    c = len(commandClaps)
-    if c == 2:
-        playback_controller.press_release(playback_controller.keys[0])
-    else:
-        print("unknown command for %d claps" % c)
+    if len(commandClaps) == 0:
+        return
+
+    minDistance = -1
+    ratios = []
+    for i in range(len(commandClaps)-1):
+        ratio = commandClaps[i+1]-commandClaps[i]
+        ratios.append(ratio)
+        if minDistance == -1 or minDistance > ratio:
+            minDistance = ratio
     
+    ratioFlags = 0
+    for i in range(len(ratios)):
+        if ratios[i] / minDistance > COMMAND_RATIO_THRESHOLD:
+            ratioFlags += 1 << (len(ratios) - i - 1)
+    
+    print(("{:%db}" % len(ratios)))
+    print(("{:0%db}" % len(ratios)).format(ratioFlags))
+    key = (1+len(ratios), ratioFlags)
+
+    if key not in COMMAND_LIST:
+        print(("no command mapped to {:%db}." % len(ratios)).format(ratioFlags))
+    else:
+        cmd = COMMAND_LIST[key]
+        print(cmd[0], cmd[1])
+        cmd[0](*cmd[1])
+        
     commandClaps.clear()
     runningThread = None
-
-def hi():
-    print("hi")
 
 def onClap(t):
     global commandClaps
@@ -104,6 +128,9 @@ while not shouldQuit:
     #print(block)
     rms = rootmeansquare(block)
 
+    if THRESHOLD_START < rms and not averageLow * 2 < rms:
+        print(averageLow * 2, rms)
+        print("average low prevented")
     if THRESHOLD_START < rms and averageLow * 2 < rms:
         highChunks += 1
     else:
