@@ -7,10 +7,15 @@ import torch
 from scipy.io.wavfile import write
 from collections import deque
 
+
+# mine own stuff
+import playback_controller
+is_prev_clap = False
+
 # Set the duration of each chunk and buffer
-chunk_duration = 0.5  # in seconds
-buffer_duration = 1.0  # in seconds
-num_samples = 100
+chunk_duration = 0.25  # in seconds
+buffer_duration = 0.5  # in seconds
+num_samples = 1000
 sample_rate = 44100  # in Hz
 dtype = np.int16
 
@@ -63,10 +68,15 @@ with stream:
 
         classes = {0: "Noise", 1: "Clap"}
 
+        if predicted_prob > 0.99 and prediction.item() == 1 and not is_prev_clap:
+            playback_controller.press_release(playback_controller.keys[0])
+
         if predicted_prob > 0.99 and prediction.item() == 1:
             print(f"👏 {predicted_prob * 100:.2f}%")
+            is_prev_clap = True
         else:
             print(".")
+            is_prev_clap = False
 
         # Wait for the next chunk
         time.sleep(chunk_duration)
