@@ -16,7 +16,7 @@ use enigo::{
 async fn call_my_sidecar(app: tauri::AppHandle, window: tauri::Window) {
     let sidecar_command = app
     .shell()
-    .sidecar("functionalDetector")
+    .sidecar("functional_detector")
     .unwrap();
 
 
